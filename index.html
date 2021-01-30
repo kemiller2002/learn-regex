@@ -1,0 +1,120 @@
+<html>
+  <head>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    <script
+      src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+      integrity="sha256-4+XzXVhsDmqanXGHaHvgh1gMQKX40OUvDEBTu8JcmNs="
+      crossorigin="anonymous"
+    ></script>
+
+    <link rel="stylesheeet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+<script>
+
+    const entries = [
+        "this is a test."
+    ]
+
+
+</script>
+    <script>
+      function createData(searchEntries) {
+        return {
+        rawEntries: searchEntries || [],
+          searchEntries: searchEntries || [],
+          global: true, 
+          invariant:false,
+          regex:""
+        };
+      }
+
+      function createMethods (){
+          return {
+            evaluate : evaluate
+          }
+      }
+
+      function createStartup(selector, data, methods, mounted) {
+        return {
+          ...selector, 
+          data: data || {},
+          methods: methods || {},
+          mounted: mounted || function(){},
+        };
+      }
+
+      function launchApp(loadData) {
+        return new Vue(loadData);
+      }
+
+      function run () {
+        const data = createData(entries);
+        const methods = createMethods();
+        const mounted = null;
+        const startup = createStartup ({el:"#app"}, data, methods, mounted);
+
+        launchApp(startup);
+      }
+
+      function validateEntry (regex, entry) {
+        return (entry || "").replace(regex, "<span highlight>$1</span>")
+      }
+
+      function runRegex (regex, entries, replace, global, invariant) {
+        const flags = (global ? "g" : "") + (invariant ? "i" : "");
+
+        return entries.map(x=>validateEntry(new RegExp(`(${regex})`, flags), x, replace));
+      }
+
+      function evaluate (regex, entries, global, invariant, replace){
+        this.searchEntries = runRegex(regex, entries, null, global, invariant);
+      }
+
+    </script>
+    <style>
+      div[regex] {
+        padding: 0.25em;
+        border: thin solid gray;
+      }
+
+      input[regex] {
+        border: 0;
+      }
+
+      input[regex]:focus {
+        border: 0;
+      }
+      button {
+        margin: 2em;
+      }
+
+      [inactive]{
+        display:none;
+      }
+
+      [highlight]{
+        border: thin solid black;
+        background-color: lightgreen;
+      }
+
+    </style>
+  </head>
+  <body onload="run()">
+    <div id="app">
+        <div regex><span>/</span><input type="text" v-model="regex" regex /><span>/</span><span :inactive="!global">g</span><span :inactive="!invariant">i</span></div>
+
+        <div>
+            <label><input type="checkbox" checked v-model="global">global</label></label>
+            <label><input type="checkbox" v-model="invariant">invariant</label></label>
+            <button type="button" v-on:click="evaluate(regex, rawEntries, global, invariant)">Run</button>
+        </div>
+
+        <div id="entries" v-for="entry in searchEntries">
+            <div v-html="entry"></div>
+        </div>
+    </div>
+</body>
+</html>
