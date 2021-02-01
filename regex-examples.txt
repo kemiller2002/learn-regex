@@ -6,6 +6,7 @@ a
 \d\d\d
 \d+
 \d*
+\s
 []
 [^]
 
@@ -15,3 +16,9 @@ $
 |
 ()
 {} ex: {1,0}
+\1 -- back propegation
+
+SHOW IN VS CODE
+replacement
+\l
+\u

@@ -88,6 +88,17 @@
   ]
 </script>
 <script>
+
+    function run () {
+        const data = createData(entries);
+        const methods = createMethods();
+        const mounted = null;
+        const startup = createStartup ({el:"#app"}, data, methods, mounted);
+
+        launchApp(startup);
+    }
+    
+
       function createData(searchEntries) {
         const convertedEntries = searchEntries.map(x=>({value:x, match:true}));
         return {
@@ -96,7 +107,9 @@
           global: true, 
           invariant:false,
           regex:"", 
-          onlyMatches : false
+          onlyMatches : false, 
+          replace : false, 
+          regexReplace : ""
         };
       }
 
@@ -120,29 +133,27 @@
         return new Vue(loadData);
       }
 
-    function run () {
-        const data = createData(entries);
-        const methods = createMethods();
-        const mounted = null;
-        const startup = createStartup ({el:"#app"}, data, methods, mounted);
+  
 
-        launchApp(startup);
-    }
-
-    function validateEntry (regex, entry) {
+    function validateEntry (regex, entry, regexReplace) {
         const matchEntry = (entry || {value:"", match:false});
+        const replacementValue = `<span highlight>${regexReplace ? regexReplace : "$1"}</span>`;  
+        const matchedValue = matchEntry
+            .value
+            .replace(regex, replacementValue);
 
-        return {value : matchEntry.value.replace(regex, "<span highlight>$1</span>"), match: matchEntry.value.match(regex) !== null, matched: matchEntry.value.match(regex) };
+        return {value : matchedValue, match: matchEntry.value.match(regex) !== null, matched: matchEntry.value.match(regex) };
     }
 
-      function runRegex (regex, entries, replace, global, invariant) {
+      function runRegex (regex, entries, replace, global, invariant, replace, regexReplace) {
         const flags = (global ? "g" : "") + (invariant ? "i" : "");
+        const encapsulatedRegex = replace ? `(${regex})` : `${regex}`;
 
-        return entries.map(x=>validateEntry(new RegExp(`(${regex})`, flags), x, replace));
+        return entries.map(x=>validateEntry(new RegExp(`(${regex})`, flags), x, replace ? regexReplace : null));
       }
 
-      function evaluate (regex, entries, global, invariant, replace){
-        this.searchEntries = runRegex(regex, entries, null, global, invariant);
+      function evaluate (regex, entries, global, invariant, replace, regexReplace){
+        this.searchEntries = runRegex(regex, entries, null, global, invariant, replace, regexReplace);
       }
 
       function generatePhoneNumbers (parameters) {
@@ -168,7 +179,7 @@
       }
 
       input[regex]:focus {
-        border: 0;
+        outline: none;
       }
       button {
         margin: 2em;
@@ -183,16 +194,30 @@
         background-color: lightgreen;
       }
 
+      div.entries {
+          overflow: auto;
+      }
+
     </style>
   </head>
   <body onload="run()">
     <div id="app">
-        <div regex><span>/</span><input type="text" v-model="regex" regex /><span>/</span><span :inactive="!global">g</span><span :inactive="!invariant">i</span></div>
+        <div regex>
+                <span>/</span>
+                <input type="text" v-model="regex" regex />
+                <span>/</span>
+                <span :inactive="!global">g</span><span :inactive="!invariant">i</span>
+
+                <span> | </span> 
+                <input type="checkbox" v-model="replace" />
+                <input type="text" v-model="regexReplace" regex placeholder="replace" />
+
+            </div>
 
         <div>
             <label><input type="checkbox" checked v-model="global">global</label></label>
             <label><input type="checkbox" v-model="invariant">invariant</label></label>
-            <button type="button" v-on:click="evaluate(regex, rawEntries, global, invariant)">Run</button>
+            <button type="button" v-on:click="evaluate(regex, rawEntries, global, invariant, replace, regexReplace)">Run</button>
             <label><input type="checkbox" v-model="onlyMatches">matches</label></label>
         </div>
 
